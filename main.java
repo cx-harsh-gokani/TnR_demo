@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.List;
  
 import javax.servlet.http.HttpServlet;
@@ -55,6 +56,21 @@ public class VulnerableServlet extends HttpServlet {
         response.setHeader("Strict-Transport-Security",
                            "max-age=31536000; includeSubDomains");
         response.setHeader("X-Content-Type-Options", "nosniff");
+    }
+
+    /**
+     * Encodes HTML special characters to prevent XSS attacks.
+     * Converts: < > & " ' to their HTML entity equivalents.
+     */
+    private String htmlEncode(String input) {
+        if (input == null) {
+            return "";
+        }
+        return input.replace("&", "&amp;")
+                    .replace("<", "&lt;")
+                    .replace(">", "&gt;")
+                    .replace("\"", "&quot;")
+                    .replace("'", "&#x27;");
     }
  
     // =====================================================================
@@ -121,7 +137,7 @@ public class VulnerableServlet extends HttpServlet {
         response.setContentType("text/html");
         PrintWriter out = response.getWriter();
         out.println("<html><body>");
-        out.println("<h2>You searched for: " + query + "</h2>");
+        out.println("<h2>You searched for: " + htmlEncode(query) + "</h2>");
         out.println("</body></html>");
     }
  
