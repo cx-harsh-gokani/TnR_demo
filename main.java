@@ -6,8 +6,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.List;
  
 import javax.servlet.http.HttpServlet;
@@ -73,10 +75,12 @@ public class VulnerableServlet extends HttpServlet {
  
         String name = request.getParameter("name");
         try (Connection conn = DriverManager.getConnection(DB_URL);
-             Statement stmt = conn.createStatement()) {
- 
-            String sql = "SELECT id FROM products WHERE name LIKE '%" + name + "%'";
-            stmt.executeQuery(sql);
+             PreparedStatement pstmt = conn.prepareStatement(
+                 "SELECT id FROM products WHERE name LIKE ?")) {
+
+            // Use parameterized query to prevent SQL injection
+            pstmt.setString(1, "%" + name + "%");
+            pstmt.executeQuery();
         } catch (SQLException e) {
             response.sendError(500);
             return;
