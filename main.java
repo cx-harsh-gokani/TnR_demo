@@ -6,10 +6,12 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.List;
- 
+
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -148,10 +150,12 @@ public class VulnerableServlet extends HttpServlet {
         }
  
         try (Connection conn = DriverManager.getConnection(DB_URL);
-             Statement stmt = conn.createStatement()) {
- 
-            String sql = "SELECT id FROM employees WHERE department = '" + department + "'";
-            stmt.executeQuery(sql);
+             PreparedStatement stmt = conn.prepareStatement(
+                 "SELECT id FROM employees WHERE department = ?")) {
+
+            // Use parameterized query to prevent SQL injection
+            stmt.setString(1, department);
+            stmt.executeQuery();
         } catch (SQLException e) {
             response.sendError(500);
             return;
