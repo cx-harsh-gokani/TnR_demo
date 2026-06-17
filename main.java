@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.List;
  
 import javax.servlet.http.HttpServlet;
@@ -95,12 +96,27 @@ public class VulnerableServlet extends HttpServlet {
     // =====================================================================
     public void pingHost(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
- 
+
         addSecurityHeaders(response);
- 
+
         String host = request.getParameter("host");
-        String[] cmd = { "/bin/sh", "-c", "ping -c 2 " + host };
-        Runtime.getRuntime().exec(cmd);
+
+        // Validate host parameter to prevent command injection
+        // Allow only valid hostname/IP characters: alphanumeric, dots, hyphens, colons (IPv6)
+        if (host == null || !host.matches("^[a-zA-Z0-9.:\\-]+$")) {
+            response.sendError(400, "Invalid host parameter");
+            return;
+        }
+
+        // Additional length check to prevent excessively long inputs
+        if (host.length() > 255) {
+            response.sendError(400, "Host parameter too long");
+            return;
+        }
+
+        // Use ProcessBuilder to pass arguments safely without shell interpretation
+        ProcessBuilder pb = new ProcessBuilder("ping", "-c", "2", host);
+        pb.start();
         response.setStatus(202);
     }
  
